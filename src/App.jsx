@@ -4,9 +4,12 @@ import './App.css'
 function App() {
     let [calc, setCalc] = useState({
       sign: "",
-      num: 1000000000000,
+      num: 0,
       res: 0,
+      numMem: 0,
     });
+
+    const [lastClicked, setLastClicked] = useState(null);
 
     const clear = () => {
       setCalc({
@@ -28,7 +31,6 @@ function App() {
 
     const clickHandler = (e) => {
       const value = e.target.value;
-      console.log(calc.num + " and " + calc.res)
       if (e.target.classList.contains("number")) {
         setCalc({
           ...calc,
@@ -40,15 +42,41 @@ function App() {
           : calc.num + value,
           res: !calc.sign ? 0 : calc.res,
         });
+        //Operator logic
       } else if (e.target.classList.contains("operator")) {
+        //If the user clicks "-" after clicking an operator
+        if(lastClicked.classList.contains("operator") && value === "-") {
           setCalc({
+            ...calc,
+            numMem: calc.num,
+            num: value,
+          })
+        } else {
+          if (lastClicked.classList.contains("operator")) {
+            //If a third operator was clicked after clicking "-", reverse the previous state change.
+            if (lastClicked.value === "-") {
+              setCalc({
+                ...calc, 
+                sign: value,
+                num: calc.numMem,
+              })} else {
+                //Otherwise set the sign to the clicked operator.
+            setCalc({
+              ...calc, 
+              sign: value,
+            })}
+           } else {
+            //If lastClicked isn't an operator, run the regular logic for a clicked operator. If there is a result and a number equate them using the operator. If lastClicked was "=" don't change result.
+            setCalc({
             ...calc,
             sign: value,
             res: !calc.res && calc.num ? calc.num : calc.num === "0" && calc.sign === "/"
             ? "Can't divide with 0"
-            : math(Number(calc.res), Number(calc.num), calc.sign),
+            : lastClicked.value === "=" ? calc.res : math(Number(calc.res), Number(calc.num), calc.sign),
             num: 0,
           });
+        }
+      }
       } else {
         switch(value) {
           case "%":
@@ -72,7 +100,6 @@ function App() {
             break;
           case "=":
             if (calc.sign && calc.num) {
-              //Could swap num and res to imporve function here (See Test 14).
               setCalc({
                 ...calc,
                 res:
@@ -85,6 +112,7 @@ function App() {
             }
         }
       }
+      setLastClicked(e.target);
     }
 
 
